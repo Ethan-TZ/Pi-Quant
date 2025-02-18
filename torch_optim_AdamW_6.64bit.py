@@ -11,25 +11,18 @@ import numpy as np
 
 
 class PQ:
-    theta_type = torch.int8
+    theta_type = torch.int16
     base = 0.0100384626433832795028841971693993751058209749445923078164
 
     @staticmethod
     def tx(ang):
-        ang = ang.to(torch.int16)
-        # ang = ang.to(torch.float32) * 1e-2
-        pq = ang % 10 * 10
-        dd = ang // 10 * 10 + 8
-        ang = (dd * 100 + pq).to(torch.float32) * 1e-2
+        ang = (ang).to(torch.float32) * 1e-2
         ang = ang * 2 * torch.pi
         return ((torch.cos(ang) + torch.cos(PQ.base * ang))).to(torch.float32)
 
     @staticmethod
     def ty(ang):
-        ang = ang.to(torch.int16)
-        pq = ang % 10 * 10
-        dd = ang // 10 * 10 + 8
-        ang = (dd * 100 + pq).to(torch.float32) * 1e-2
+        ang = (ang).to(torch.float32) * 1e-2
         ang = ang * 2 * torch.pi
         return ((torch.sin(ang) + torch.sin(PQ.base * ang))).to(torch.float32)
 
@@ -43,10 +36,7 @@ class PQ:
         dd = (-pq * PQ.base + dd) / (2 * torch.pi)
         dd = torch.floor((dd - torch.floor(dd)) * 1e2)
         pq = (pq / (2 * torch.pi) * 100).round()
-
-        dd = dd // 10
-        pq = pq // 10
-        return (dd * 10 + pq).to(PQ.theta_type)
+        return (dd * 100 + pq).to(PQ.theta_type)
 
     @staticmethod
     def encode(tensor):
@@ -489,7 +479,6 @@ def _single_tensor_adamw(
 
         if lens % 32 == 0:
             if step_t.item() == 1:
-                print('single_tensor_adamtz')
                 exp_avg_f = torch.zeros_like(grad, memory_format=torch.preserve_format).to(grad)
                 exp_avg_sq_f = torch.zeros_like(grad, memory_format=torch.preserve_format).to(grad)
             else:
